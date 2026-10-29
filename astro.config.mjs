@@ -3,11 +3,8 @@ import { unified } from '@astrojs/markdown-remark';
 import remarkEmbeds from './src/plugins/remark-embeds.mjs';
 
 // 1. Your GitHub Pages address.
-const SITE = 'https://YOUR-USERNAME.github.io';
-
-// 2. Leave BASE empty if your repository is named YOUR-USERNAME.github.io.
-//    Otherwise set it to '/your-repository-name' (leading slash, no trailing slash).
-const BASE = '';
+const SITE = 'https://swaggeriah.github.io';
+const BASE = '/portfolio';
 
 export default defineConfig({
   site: SITE,
