@@ -1,0 +1,69 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import Window from '../components/Window.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import EntryCard from '../components/EntryCard.astro';
+import { site } from '../site.config';
+import { getProjects, getEntries, groupBy } from '../lib/content';
+import profile from '../assets/profile.jpg';
+
+const projects = await getProjects();
+const entries = await getEntries();
+
+const current = projects.find((project) => project.data.current);
+const keyPoints = groupBy(entries, (entry) => entry.data.keyPoints);
+const projectTitle = new Map(projects.map((project) => [project.id, project.data.title]));
+---
+
+<Base>
+  <Window title="About me">
+    <div class="hero">
+      <Image src={profile} alt={site.name} width={400} class="profile" />
+      <div>
+        <h1>{site.name}</h1>
+        <p class="tagline">{site.tagline}</p>
+        {site.about.map((paragraph) => <p>{paragraph}</p>)}
+      </div>
+    </div>
+  </Window>
+
+  <Window title="Contact" id="contact">
+    <ul class="contacts">
+      {site.contacts.map((contact) => <li><a class="btn" href={contact.href}>{contact.label}</a></li>)}
+    </ul>
+  </Window>
+
+  {
+    current && (
+      <Window title="Current project">
+        <ProjectCard project={current} featured />
+      </Window>
+    )
+  }
+
+  <Window title="Projects" id="projects">
+    <div class="grid">
+      {projects.map((project) => <ProjectCard project={project} />)}
+    </div>
+  </Window>
+
+  {
+    keyPoints.length > 0 && (
+      <Window title="Key points" id="key-points">
+        {keyPoints.map(([name, items]) => (
+          <details open>
+            <summary>
+              {name} <span class="count">{items.length}</span>
+            </summary>
+            <div class="grid">
+              {items.map((entry) => (
+                <EntryCard entry={entry} projectTitle={projectTitle.get(entry.projectId)} />
+              ))}
+            </div>
+          </details>
+        ))}
+      </Window>
+    )
+  }
+</Base>

@@ -1,0 +1,19 @@
+---
+interface Props {
+  title: string;
+  id?: string;
+  heading?: 'h1' | 'h2' | 'h3';
+  narrow?: boolean;
+  style?: string;
+}
+
+const { title, id, heading = 'h2', narrow = false, style } = Astro.props;
+const Heading = heading;
+---
+
+<section class:list={['window', { narrow }]} id={id} style={style}>
+  <Heading class="title-bar">{title}</Heading>
+  <div class="window-body">
+    <slot />
+  </div>
+</section>

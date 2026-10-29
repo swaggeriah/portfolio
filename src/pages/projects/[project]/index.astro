@@ -1,0 +1,63 @@
+---
+import { Image } from 'astro:assets';
+import { render } from 'astro:content';
+import Base from '../../../layouts/Base.astro';
+import Window from '../../../components/Window.astro';
+import EntryCard from '../../../components/EntryCard.astro';
+import { getProjects, getEntries, groupBy, formatDate, url } from '../../../lib/content';
+
+export async function getStaticPaths() {
+  const projects = await getProjects();
+  const entries = await getEntries();
+  return projects.map((project) => ({
+    params: { project: project.id },
+    props: {
+      project,
+      entries: entries.filter((entry) => entry.projectId === project.id),
+    },
+  }));
+}
+
+const { project, entries } = Astro.props;
+const { Content } = await render(project);
+const categories = groupBy(entries, (entry) => [entry.data.category]);
+
+// This project's own title bar colours (see global.css for the defaults).
+const { gradientTop, gradientBottom } = project.data;
+const colours = [
+  gradientTop ? `--grad-top: ${gradientTop}` : '',
+  gradientBottom ? `--grad-bottom: ${gradientBottom}` : '',
+]
+  .filter(Boolean)
+  .join('; ');
+---
+
+<Base title={project.data.title} description={project.data.summary}>
+  <nav class="crumbs">
+    <a class="btn" href={url('/')}>← Home</a>
+  </nav>
+
+  <Window title={project.data.title} heading="h1" style={colours || undefined}>
+    <div class="project-header">
+      <Image src={project.data.thumbnail} alt="" width={400} class="logo" />
+      <p class="meta">{formatDate(project.data.date)}</p>
+      <div class="prose panel"><Content /></div>
+    </div>
+  </Window>
+
+  <Window title="Entries">
+    {entries.length === 0 && <p>No entries yet.</p>}
+    {
+      categories.map(([name, items]) => (
+        <details open>
+          <summary>
+            {name} <span class="count">{items.length}</span>
+          </summary>
+          <div class="grid">
+            {items.map((entry) => <EntryCard entry={entry} />)}
+          </div>
+        </details>
+      ))
+    }
+  </Window>
+</Base>

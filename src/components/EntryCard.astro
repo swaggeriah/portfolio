@@ -1,0 +1,27 @@
+---
+import { Image } from 'astro:assets';
+import type { Entry } from '../lib/content';
+
+interface Props {
+  entry: Entry;
+  projectTitle?: string;
+}
+
+const { entry, projectTitle } = Astro.props;
+const { title, summary, thumbnail, category } = entry.data;
+---
+
+<a class="card" href={entry.href}>
+  <h3 class="title-bar">{title}</h3>
+  {
+    thumbnail ? (
+      <Image src={thumbnail} alt="" width={320} class="thumb" />
+    ) : (
+      <div class="thumb placeholder" aria-hidden="true">▶</div>
+    )
+  }
+  <div class="card-body">
+    {projectTitle && <p class="meta">{projectTitle} · {category}</p>}
+    {summary && <p>{summary}</p>}
+  </div>
+</a>

@@ -1,0 +1,31 @@
+---
+import { Image } from 'astro:assets';
+import { formatDate, url } from '../lib/content';
+import type { Project } from '../lib/content';
+
+interface Props {
+  project: Project;
+  featured?: boolean;
+}
+
+const { project, featured = false } = Astro.props;
+const { title, date, summary, thumbnail, gradientTop, gradientBottom } = project.data;
+
+// This project's own title bar colours (see global.css for the defaults).
+const colours = [
+  gradientTop ? `--grad-top: ${gradientTop}` : '',
+  gradientBottom ? `--grad-bottom: ${gradientBottom}` : '',
+]
+  .filter(Boolean)
+  .join('; ');
+---
+
+<a class:list={['card', { featured }]} href={url(`/projects/${project.id}/`)} style={colours || undefined}>
+  <h3 class="title-bar">{title}</h3>
+  <Image src={thumbnail} alt="" width={featured ? 640 : 320} class="thumb" />
+  <div class="card-body">
+    <p class="meta">{formatDate(date)}</p>
+    <p>{summary}</p>
+    <span class="btn">Go to →</span>
+  </div>
+</a>

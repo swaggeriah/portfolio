@@ -1,0 +1,20 @@
+{
+  "name": "portfoliogithub",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "astro build",
+    "preview": "astro preview",
+    "dev": "astro dev"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@astrojs/markdown-remark": "^7.3.3",
+    "astro": "^7.4.1"
+  }
+}
