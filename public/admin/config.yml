@@ -1,0 +1,67 @@
+# Settings for the editor at /admin/. Edit the text, not the structure.
+
+backend:
+  name: github
+  repo: swaggeriah/portfolio
+  branch: main
+  auth_methods: [token]
+
+app_title: Portfolio editor
+site_url: https://swaggeriah.github.io/portfolio/
+display_url: https://swaggeriah.github.io/portfolio/
+
+# Images inserted into the text of a post are saved in the public/media folder
+# and reached at /media/... on the site.
+media_folder: public/media
+public_folder: /media
+
+# No stock photo sources in the file picker.
+media_libraries:
+  default:
+    config:
+      slugify_filename: true
+  stock_assets:
+    providers: []
+
+collections:
+  - name: projects
+    label: Projects
+    label_singular: Project
+    folder: src/content/projects
+    extension: md
+    format: frontmatter
+    create: true
+    slug: '{{title}}'
+    summary: '{{title}}'
+    fields:
+      - { name: title, label: Title, widget: string }
+      - { name: summary, label: Short summary, widget: text }
+      - { name: date, label: Date, widget: datetime, date_format: 'YYYY-MM-DD', time_format: false }
+      - { name: current, label: Current project, widget: boolean, default: false, hint: 'Shows this project in the "Current project" box on the main page.' }
+      - { name: thumbnail, label: Thumbnail, widget: image, media_folder: /src/assets/uploads, public_folder: ../../assets/uploads }
+      - { name: gradientTop, label: Title bar colour (top), widget: color, required: false }
+      - { name: gradientBottom, label: Title bar colour (bottom), widget: color, required: false }
+      - { name: body, label: Description, widget: markdown }
+
+  - name: entries
+    label: Entries
+    label_singular: Entry
+    folder: src/content/entries
+    path: '{{project}}/{{slug}}'
+    extension: md
+    format: frontmatter
+    create: true
+    slug: '{{title}}'
+    media_folder: /public/media
+    public_folder: /media
+    summary: '{{title}} ({{project}})'
+    fields:
+      - { name: project, label: Project, widget: relation, collection: projects, value_field: '{{slug}}', search_fields: [title], display_fields: [title], hint: 'Which project this entry belongs to. Changing it later does not move the entry.' }
+      - { name: title, label: Title, widget: string }
+      - { name: summary, label: Short summary, widget: text, required: false }
+      - { name: date, label: Date, widget: datetime, date_format: 'YYYY-MM-DD', time_format: false }
+      - { name: category, label: Category, widget: string, default: Other, hint: 'Groups entries on the project page, for example Animation or Visual Effects.' }
+      - { name: keyPoints, label: Key points, widget: list, required: false, field: { name: keyPoint, label: Key point, widget: string }, hint: 'Groups on the main page, for example Battlegrounds moves.' }
+      - { name: thumbnail, label: Thumbnail, widget: image, required: false, media_folder: /src/assets/uploads, public_folder: ../../../assets/uploads }
+      - { name: draft, label: Draft (hidden on the live site), widget: boolean, default: false }
+      - { name: body, label: Text, widget: markdown }
