@@ -10,12 +10,7 @@ thumbnail: ../../../assets/uploads/skjermbilde-2026-11-18-kl.-09.53.11.png
 draft: false
 blocks:
   - type: content
-    text: |-
-      barwariauwaihufaiuafwihuawfiuh
-
-      wdadawda
-
-      wdawdadawdawfoiajwjoiawfjoawfjo
+    text: wdawdawdawdawd
     media:
       - src: /media/makeitmeme_6wp95.jpeg
         frame: none
