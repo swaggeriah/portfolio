@@ -1,8 +1,8 @@
 ---
 import '../styles/global.css';
 import { site } from '../site.config';
-import { url } from '../lib/content';
-import { pageStyles } from '../lib/style';
+import { url, publicUrl } from '../lib/content';
+import { pageStyles } from '../lib/render';
 import type { PageSettings } from '../lib/blocks';
 
 interface Props {
@@ -14,7 +14,7 @@ interface Props {
 
 const { title, description = `${site.name}: ${site.tagline}`, page, width = '920px' } = Astro.props;
 const pageTitle = title ? `${title} · ${site.name}` : site.name;
-const styles = pageStyles(page, width);
+const styles = pageStyles(page, width, publicUrl);
 ---
 
 <!doctype html>

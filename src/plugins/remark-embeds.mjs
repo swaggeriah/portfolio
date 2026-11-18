@@ -94,7 +94,9 @@ const caption = (text) => (text ? `<figcaption>${esc(text)}</figcaption>` : '');
 
 // Works out what a link or file path is and returns { kind, html } without any
 // wrapper around it, or null when it is not something we recognise.
-export function mediaFor(raw, alt = '', base = '') {
+// `resolve` (optional) turns a local path like /media/clip.mp4 into the address to use;
+// without it the base path is simply put in front.
+export function mediaFor(raw, alt = '', base = '', resolve) {
   let u;
   try {
     u = new URL(raw, 'https://placeholder.invalid');
@@ -102,7 +104,7 @@ export function mediaFor(raw, alt = '', base = '') {
     return null;
   }
   const local = isLocal(raw);
-  const src = local ? base + raw : raw;
+  const src = local ? (resolve ? resolve(raw) : base + raw) : raw;
 
   if (!local) {
     const yt = youtubeId(u);
@@ -174,51 +176,51 @@ export function mediaFor(raw, alt = '', base = '') {
 }
 
 // Returns { kind, html } for a link inside Markdown text, or null when it is not something we embed.
-export function embedFor(raw, alt, base) {
-  const media = mediaFor(raw, alt, base);
+export function embedFor(raw, alt, base, resolve) {
+  const media = mediaFor(raw, alt, base, resolve);
   if (!media) return null;
   if (media.kind === 'player') return media;
   return { kind: media.kind, html: `<figure class="embed-file">${media.html}${caption(alt)}</figure>` };
 }
 
 // If a paragraph holds only a bare link, a bare URL or an image, return its embed html.
-function embedFromParagraph(paragraph, base) {
+function embedFromParagraph(paragraph, base, resolve) {
   if (paragraph.children.length !== 1) return null;
   const only = paragraph.children[0];
 
   if (only.type === 'link') {
     const label = only.children.length === 1 && only.children[0].type === 'text' ? only.children[0].value : null;
     if (label !== only.url) return null; // a normal [text](url) link stays a link
-    return embedFor(only.url, '', base)?.html ?? null;
+    return embedFor(only.url, '', base, resolve)?.html ?? null;
   }
   if (only.type === 'text' && /^https?:\/\/\S+$/.test(only.value.trim())) {
-    return embedFor(only.value.trim(), '', base)?.html ?? null;
+    return embedFor(only.value.trim(), '', base, resolve)?.html ?? null;
   }
   if (only.type === 'image') {
-    const embed = embedFor(only.url, only.alt ?? '', base);
+    const embed = embedFor(only.url, only.alt ?? '', base, resolve);
     // Plain images stay normal Markdown images; only videos, audio and players get replaced.
     return embed && embed.kind !== 'image' ? embed.html : null;
   }
   return null;
 }
 
-function visit(parent, base) {
+function visit(parent, base, resolve) {
   parent.children.forEach((node, index) => {
     if (node.type === 'paragraph') {
-      const html = embedFromParagraph(node, base);
+      const html = embedFromParagraph(node, base, resolve);
       if (html) {
         parent.children[index] = { type: 'html', value: html };
         return;
       }
     }
-    if (node.type === 'image' && base && isLocal(node.url)) {
-      node.url = base + node.url;
+    if (node.type === 'image' && isLocal(node.url) && (resolve || base)) {
+      node.url = resolve ? resolve(node.url) : base + node.url;
     }
-    if (node.children) visit(node, base);
+    if (node.children) visit(node, base, resolve);
   });
 }
 
-export default function remarkEmbeds({ base = '' } = {}) {
+export default function remarkEmbeds({ base = '', resolve } = {}) {
   const prefix = base.replace(/\/$/, '');
-  return (tree) => visit(tree, prefix);
+  return (tree) => visit(tree, prefix, resolve);
 }

@@ -1,12 +1,10 @@
 ---
 // Draws the list of layout blocks from a project or entry file.
-// To add a new kind of block: add its schema in src/lib/blocks.ts and a branch below.
+// The drawing itself lives in src/lib/render.ts, which the editor's live preview uses too.
 import type { Block } from '../lib/blocks';
 import { renderMarkdown } from '../lib/markdown';
-import { publicUrl, styleString } from '../lib/style';
-import BlockFrame from './BlockFrame.astro';
-import Box from './Box.astro';
-import MediaItem from './MediaItem.astro';
+import { renderBlocks } from '../lib/render';
+import { publicUrl } from '../lib/content';
 
 interface Props {
   blocks: Block[];
@@ -14,136 +12,11 @@ interface Props {
 
 const { blocks } = Astro.props;
 
-// Block text is Markdown, drawn once per block here.
-const html = await Promise.all(
+// Block text is Markdown, converted once per block here.
+const textHtml = await Promise.all(
   blocks.map((block) => (block.type === 'content' && block.text ? renderMarkdown(block.text) : '')),
 );
-
-const FONTS = {
-  default: undefined,
-  sans: 'Arial, Helvetica, sans-serif',
-  serif: "Georgia, 'Times New Roman', serif",
-  mono: "'Courier New', Courier, monospace",
-  cursive: "'Segoe Script', 'Brush Script MT', cursive",
-};
-const SIZES = { small: '0.875rem', normal: undefined, large: '1.25rem', huge: '1.8rem' };
-const VALIGN = { top: 'flex-start', center: 'center', bottom: 'flex-end' };
-const JUSTIFY = { left: 'flex-start', center: 'center', right: 'flex-end' };
-
-// Only ordinary links are allowed on buttons. Site paths like /projects/x/ get the base path.
-const safeHref = (href: string) =>
-  /^(https?:|mailto:|tel:|#)/i.test(href) ? href : href.startsWith('/') ? publicUrl(href) : undefined;
+const html = renderBlocks(blocks, { resolve: publicUrl, textHtml });
 ---
 
-{
-  blocks.length > 0 && (
-    <div class="blocks">
-      {blocks.map((block, i) => {
-        if (block.type === 'content') {
-          const media = block.media.filter((item) => item.src);
-          const hasText = Boolean(block.text?.trim());
-          const stacked = block.mediaSide === 'above' || block.mediaSide === 'below';
-          const box = block.textBox;
-          return (
-            <BlockFrame block={block}>
-              <div
-                class:list={['row', `side-${block.mediaSide}`, { stacked, 'text-only': media.length === 0, 'media-only': !hasText }]}
-                style={styleString({
-                  '--media-w': `${block.mediaWidth}%`,
-                  '--gap': `${block.gap}px`,
-                  '--valign': VALIGN[block.valign],
-                })}
-              >
-                {hasText && (
-                  <div class="text">
-                    <Box
-                      box={box}
-                      class="text-box"
-                      extra={{
-                        color: box.textColor,
-                        'font-family': FONTS[box.font],
-                        'font-size': SIZES[box.size],
-                        'text-align': box.align,
-                      }}
-                    >
-                      <div class="rich" set:html={html[i]} />
-                    </Box>
-                  </div>
-                )}
-                {media.length > 0 && (
-                  <div class="media-col">
-                    {media.map((item) => <MediaItem item={item} />)}
-                  </div>
-                )}
-              </div>
-            </BlockFrame>
-          );
-        }
-
-        if (block.type === 'gallery') {
-          const images = block.images.filter((item) => item.src);
-          return (
-            <BlockFrame block={block}>
-              <div
-                class:list={['gallery', { many: block.columns > 2 }]}
-                style={styleString({ '--cols': block.columns, '--gap': `${block.gap}px` })}
-              >
-                {images.map((item) => <MediaItem item={item} fill />)}
-              </div>
-            </BlockFrame>
-          );
-        }
-
-        if (block.type === 'buttons') {
-          const items = block.items.filter((item) => item.label && item.url && safeHref(item.url));
-          return (
-            <BlockFrame block={block}>
-              <div class="buttons" style={styleString({ 'justify-content': JUSTIFY[block.align] })}>
-                {items.map((item) => (
-                  <a
-                    class="btn"
-                    href={safeHref(item.url!)}
-                    target={item.newTab ? '_blank' : undefined}
-                    rel={item.newTab ? 'noopener noreferrer' : undefined}
-                  >
-                    {item.label}
-                  </a>
-                ))}
-              </div>
-            </BlockFrame>
-          );
-        }
-
-        if (block.type === 'spacer') {
-          return (
-            <BlockFrame block={block}>
-              <div class="spacer" style={`height:${block.height}px`} />
-            </BlockFrame>
-          );
-        }
-
-        // divider
-        return (
-          <div
-            class={`block block-divider`}
-            style={styleString({
-              'margin-top': block.spaceAbove ? `${block.spaceAbove}px` : undefined,
-              'margin-bottom': block.spaceBelow ? `${block.spaceBelow}px` : undefined,
-            })}
-          >
-            {block.kind === 'stars' ? (
-              <div class="divider divider-stars" aria-hidden="true" style={styleString({ color: block.color, width: `${block.width}%` })}>
-                ✦ ✦ ✦
-              </div>
-            ) : (
-              <hr
-                class={`divider divider-${block.kind}`}
-                style={styleString({ '--c': block.color, '--t': `${block.thickness}px`, width: `${block.width}%` })}
-              />
-            )}
-          </div>
-        );
-      })}
-    </div>
-  )
-}
+<Fragment set:html={html} />

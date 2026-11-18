@@ -14,6 +14,10 @@ export type Entry = CollectionEntry<'entries'> & {
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 export const url = (path: string) => `${base}${path}`;
 
+// Files in /media/... need the site's base path in front. Full web addresses stay as they are.
+export const publicUrl = (path: string) =>
+  /^(https?:)?\/\//.test(path) || !path.startsWith('/') ? path : url(path);
+
 export const formatDate = (date: Date) =>
   date.toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
 
