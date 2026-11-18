@@ -1,4 +1,5 @@
 ---
+project: jojo-foolery
 title: Stand Strike
 summary: A heavy melee move with a charge-up and a screen-shaking impact.
 date: 2026-09-12

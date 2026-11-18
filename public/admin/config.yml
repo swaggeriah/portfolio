@@ -1,67 +1,626 @@
-# Settings for the editor at /admin/. Edit the text, not the structure.
+# Settings for the editor at /admin/. Generated structure: edit the text of labels and hints freely.
+# Images, videos and sound files you add are saved in public/media and reached at /media/... on the site.
 
 backend:
   name: github
   repo: swaggeriah/portfolio
   branch: main
   auth_methods: [token]
-
 app_title: Portfolio editor
 site_url: https://swaggeriah.github.io/portfolio/
 display_url: https://swaggeriah.github.io/portfolio/
-
-# Images inserted into the text of a post are saved in the public/media folder
-# and reached at /media/... on the site.
 media_folder: public/media
 public_folder: /media
-
-# No stock photo sources in the file picker.
 media_libraries:
   default:
-    config:
-      slugify_filename: true
+    config: {slugify_filename: true}
   stock_assets:
     providers: []
-
+output: {omit_empty_optional_fields: true}
 collections:
-  - name: projects
-    label: Projects
-    label_singular: Project
-    folder: src/content/projects
-    extension: md
-    format: frontmatter
-    create: true
-    slug: '{{title}}'
-    summary: '{{title}}'
+- name: projects
+  label: Projects
+  label_singular: Project
+  folder: src/content/projects
+  extension: md
+  format: frontmatter
+  create: true
+  slug: '{{title}}'
+  summary: '{{title}}'
+  fields:
+  - {name: title, label: Title, widget: string}
+  - {name: summary, label: Short summary, widget: text}
+  - {name: date, label: Date, widget: datetime, date_format: YYYY-MM-DD, time_format: false}
+  - {name: current, label: Current project, widget: boolean, default: false, hint: Shows this project in the "Current project" box on the main page.}
+  - {name: thumbnail, label: Thumbnail, widget: image, media_folder: /src/assets/uploads, public_folder: ../../assets/uploads}
+  - {name: gradientTop, label: Title bar colour (top), widget: color, required: false}
+  - {name: gradientBottom, label: Title bar colour (bottom), widget: color, required: false}
+  - {name: body, label: Description, widget: markdown, required: false, hint: Shown in a white box under the thumbnail. Leave empty to skip it and use only the blocks below.}
+  - name: page
+    label: Page settings
+    widget: object
+    required: false
+    collapsed: true
     fields:
-      - { name: title, label: Title, widget: string }
-      - { name: summary, label: Short summary, widget: text }
-      - { name: date, label: Date, widget: datetime, date_format: 'YYYY-MM-DD', time_format: false }
-      - { name: current, label: Current project, widget: boolean, default: false, hint: 'Shows this project in the "Current project" box on the main page.' }
-      - { name: thumbnail, label: Thumbnail, widget: image, media_folder: /src/assets/uploads, public_folder: ../../assets/uploads }
-      - { name: gradientTop, label: Title bar colour (top), widget: color, required: false }
-      - { name: gradientBottom, label: Title bar colour (bottom), widget: color, required: false }
-      - { name: body, label: Description, widget: markdown }
-
-  - name: entries
-    label: Entries
-    label_singular: Entry
-    folder: src/content/entries
-    path: '{{project}}/{{slug}}'
-    extension: md
-    format: frontmatter
-    create: true
-    slug: '{{title}}'
-    media_folder: /public/media
-    public_folder: /media
-    summary: '{{title}} ({{project}})'
+    - {name: desktopColor, label: Background colour, widget: color, allowInput: true, required: false, hint: The colour behind the windows. Leave empty for the site default.}
+    - {name: desktopImage, label: Background picture, widget: image, required: false}
+    - {name: desktopImageMode, label: Background picture layout, widget: select, options: [{label: Repeat as tiles, value: tile}, {label: Cover the page, value: cover}, {label: 'Centre, original size', value: center}, {label: 'Plain colour: hide the pattern', value: none}], default: tile, required: false, hint: Pick "Plain colour" to remove the site's pattern without adding a picture.}
+    - {name: windowWidth, label: Window width, widget: select, required: false, options: [{label: Narrow, value: narrow}, {label: Medium, value: medium}, {label: Wide, value: wide}, {label: Full screen, value: full}], hint: 'Leave empty for the default (entries are medium, projects are wide).'}
+    hint: Background and width for this page only.
+  - name: blocks
+    label: Page layout blocks
+    label_singular: Block
+    widget: list
+    required: false
+    typeKey: type
+    collapsed: auto
+    summary: '{{fields.type}}'
+    hint: Build the page from blocks, top to bottom. Use the arrows to reorder them. They appear below the Text above.
+    types:
+    - name: content
+      label: Text and media
+      widget: object
+      summary: '{{fields.text}}'
+      fields:
+      - {name: text, label: Text, widget: markdown, required: false}
+      - name: media
+        label: Pictures, videos, sound
+        label_singular: Media item
+        widget: list
+        required: false
+        collapsed: auto
+        summary: '{{fields.caption}} {{fields.src}}'
+        thumbnail: src
+        hint: Shown beside or above/below the text. Leave empty for a text-only block, or leave the text empty to show only media.
+        fields:
+        - {name: src, label: File or link, widget: file, accept: 'image/*,video/*,audio/*', required: false, hint: 'Upload an image, mp4 video or mp3 sound file, or choose "Enter URL" and paste a link: YouTube, Vimeo, TikTok, Instagram, Streamable, Dailymotion, Google Drive, Spotify or SoundCloud.'}
+        - {name: caption, label: Caption, widget: string, required: false}
+        - {name: alt, label: Description for screen readers, widget: string, required: false}
+        - {name: frame, label: Frame, widget: select, options: [{label: No frame, value: none}, {label: Raised grey frame, value: raised}, {label: Sunken white frame, value: sunken}, {label: Black outline, value: outline}], default: none, required: false}
+        - {name: size, label: Size (% of its column), widget: number, value_type: int, min: 10, max: 100, default: 100, required: false}
+        - {name: align, label: Position in its column, widget: select, options: [{label: Left, value: left}, {label: Centre, value: center}, {label: Right, value: right}], default: center, required: false}
+      - {name: mediaSide, label: Media position, widget: select, options: [{label: 'Beside the text, on the right', value: right}, {label: 'Beside the text, on the left', value: left}, {label: Above the text, value: above}, {label: Below the text, value: below}], default: right, required: false}
+      - {name: mediaWidth, label: Media column width (%), widget: number, value_type: int, min: 15, max: 85, default: 45, required: false, hint: Only for left and right.}
+      - {name: valign, label: Line up with, widget: select, options: [{label: Top, value: top}, {label: Middle, value: center}, {label: Bottom, value: bottom}], default: top, required: false, hint: Where the shorter side sits next to the taller one.}
+      - {name: gap, label: Space between text and media (px), widget: number, value_type: int, min: 0, max: 120, default: 20, required: false}
+      - name: textBox
+        label: Text backdrop and style
+        widget: object
+        required: true
+        collapsed: true
+        fields:
+        - {name: backdrop, label: Backdrop, widget: select, options: [{label: None, value: none}, {label: White panel (sunken), value: panel}, {label: Grey panel (raised), value: raised}, {label: Window with title bar, value: window}, {label: Flat colour, value: flat}, {label: Outline only, value: outline}, {label: Dashed outline, value: dashed}], default: none, required: false, hint: What sits behind it. "Window" draws a Windows 95 window with a title bar.}
+        - {name: title, label: Window title, widget: string, required: false, hint: Only used by the "Window with title bar" backdrop.}
+        - {name: color, label: Backdrop colour, widget: color, allowInput: true, required: false, hint: Leave empty for the backdrop's normal colour. For outlines this is the line colour.}
+        - {name: opacity, label: Backdrop opacity (%), widget: number, value_type: int, min: 0, max: 100, default: 100, required: false, hint: '100 is solid, 0 is invisible. Text is never faded.'}
+        - {name: image, label: Backdrop picture, widget: image, required: false, hint: Optional picture drawn behind the text or media.}
+        - {name: imageMode, label: Backdrop picture layout, widget: select, options: [{label: Repeat as tiles, value: tile}, {label: Cover the whole box, value: cover}, {label: Fit inside, value: contain}, {label: 'Centre, original size', value: center}], default: tile, required: false}
+        - {name: padding, label: Space inside the backdrop, widget: select, options: [{label: Automatic, value: auto}, {label: None, value: none}, {label: Small, value: small}, {label: Medium, value: medium}, {label: Large, value: large}, {label: Extra large, value: xl}], default: auto, required: false}
+        - {name: textColor, label: Text colour, widget: color, allowInput: true, required: false}
+        - {name: font, label: Font, widget: select, options: [{label: Comic Sans (site default), value: default}, {label: Sans-serif, value: sans}, {label: Serif, value: serif}, {label: Monospace, value: mono}, {label: Handwriting, value: cursive}], default: default, required: false}
+        - {name: size, label: Text size, widget: select, options: [{label: Small, value: small}, {label: Normal, value: normal}, {label: Large, value: large}, {label: Huge, value: huge}], default: normal, required: false}
+        - {name: align, label: Text alignment, widget: select, options: [{label: Left, value: left}, {label: Centre, value: center}, {label: Right, value: right}], default: left, required: false}
+        hint: The box behind just the text, and how the text looks.
+      - name: style
+        label: Block backdrop and position
+        widget: object
+        required: true
+        collapsed: true
+        fields:
+        - {name: backdrop, label: Backdrop, widget: select, options: [{label: None, value: none}, {label: White panel (sunken), value: panel}, {label: Grey panel (raised), value: raised}, {label: Window with title bar, value: window}, {label: Flat colour, value: flat}, {label: Outline only, value: outline}, {label: Dashed outline, value: dashed}], default: none, required: false, hint: What sits behind it. "Window" draws a Windows 95 window with a title bar.}
+        - {name: title, label: Window title, widget: string, required: false, hint: Only used by the "Window with title bar" backdrop.}
+        - {name: color, label: Backdrop colour, widget: color, allowInput: true, required: false, hint: Leave empty for the backdrop's normal colour. For outlines this is the line colour.}
+        - {name: opacity, label: Backdrop opacity (%), widget: number, value_type: int, min: 0, max: 100, default: 100, required: false, hint: '100 is solid, 0 is invisible. Text is never faded.'}
+        - {name: image, label: Backdrop picture, widget: image, required: false, hint: Optional picture drawn behind the text or media.}
+        - {name: imageMode, label: Backdrop picture layout, widget: select, options: [{label: Repeat as tiles, value: tile}, {label: Cover the whole box, value: cover}, {label: Fit inside, value: contain}, {label: 'Centre, original size', value: center}], default: tile, required: false}
+        - {name: padding, label: Space inside the backdrop, widget: select, options: [{label: Automatic, value: auto}, {label: None, value: none}, {label: Small, value: small}, {label: Medium, value: medium}, {label: Large, value: large}, {label: Extra large, value: xl}], default: auto, required: false}
+        - {name: width, label: Block width, widget: select, options: [{label: Full width, value: full}, {label: Wide (86%), value: wide}, {label: Medium (68%), value: medium}, {label: Narrow (48%), value: narrow}], default: full, required: false}
+        - {name: align, label: Block position, widget: select, options: [{label: Left, value: left}, {label: Centre, value: center}, {label: Right, value: right}], default: center, required: false, hint: Where a block that is not full width sits.}
+        - {name: spaceAbove, label: Extra space above (px), widget: number, value_type: int, min: -150, max: 300, default: 0, required: false, hint: Negative numbers pull the block up so it overlaps the one above.}
+        - {name: spaceBelow, label: Extra space below (px), widget: number, value_type: int, min: -150, max: 300, default: 0, required: false}
+        hint: The box behind the whole block, and where the block sits on the page.
+      - name: decorations
+        label: Decorations
+        label_singular: Decoration
+        widget: list
+        required: false
+        collapsed: true
+        minimize_collapsed: true
+        summary: '{{fields.image}}'
+        thumbnail: image
+        hint: 'Loose pictures placed on this block: stickers, ribbons, doodles. PNG or GIF with a see-through background works best.'
+        fields:
+        - {name: image, label: Picture, widget: image, required: false}
+        - {name: anchor, label: Attach to, widget: select, options: [{label: Top left, value: top-left}, {label: Top, value: top}, {label: Top right, value: top-right}, {label: Left, value: left}, {label: Centre, value: center}, {label: Right, value: right}, {label: Bottom left, value: bottom-left}, {label: Bottom, value: bottom}, {label: Bottom right, value: bottom-right}], default: top-left, required: false, hint: Which point of the block the picture is attached to. The matching point of the picture sits there.}
+        - {name: x, label: Move right (px), widget: number, value_type: int, min: -1500, max: 1500, default: 0, required: false, hint: Negative numbers move it left.}
+        - {name: y, label: Move down (px), widget: number, value_type: int, min: -1500, max: 1500, default: 0, required: false, hint: Negative numbers move it up.}
+        - {name: width, label: Width (px), widget: number, value_type: int, min: 8, max: 1600, default: 140, required: false, hint: Shrinks to 60% on phones.}
+        - {name: rotate, label: Rotate (degrees), widget: number, value_type: int, min: -180, max: 180, default: 0, required: false}
+        - {name: opacity, label: Opacity (%), widget: number, value_type: int, min: 0, max: 100, default: 100, required: false}
+        - {name: flip, label: Mirror left to right, widget: boolean, default: false, required: false}
+        - {name: layer, label: Layer, widget: select, options: [{label: Behind the backdrop, value: behind}, {label: 'On the backdrop, behind the text', value: middle}, {label: In front of everything, value: front}], default: front, required: false}
+    - name: gallery
+      label: Picture gallery
+      widget: object
+      summary: Gallery
+      fields:
+      - name: images
+        label: Pictures
+        label_singular: Picture
+        widget: list
+        required: false
+        collapsed: auto
+        summary: '{{fields.caption}} {{fields.src}}'
+        thumbnail: src
+        hint: Pictures or videos laid out in a grid.
+        fields:
+        - {name: src, label: File or link, widget: file, accept: 'image/*,video/*,audio/*', required: false, hint: 'Upload an image, mp4 video or mp3 sound file, or choose "Enter URL" and paste a link: YouTube, Vimeo, TikTok, Instagram, Streamable, Dailymotion, Google Drive, Spotify or SoundCloud.'}
+        - {name: caption, label: Caption, widget: string, required: false}
+        - {name: alt, label: Description for screen readers, widget: string, required: false}
+        - {name: frame, label: Frame, widget: select, options: [{label: No frame, value: none}, {label: Raised grey frame, value: raised}, {label: Sunken white frame, value: sunken}, {label: Black outline, value: outline}], default: none, required: false}
+        - {name: size, label: Size (% of its column), widget: number, value_type: int, min: 10, max: 100, default: 100, required: false}
+        - {name: align, label: Position in its column, widget: select, options: [{label: Left, value: left}, {label: Centre, value: center}, {label: Right, value: right}], default: center, required: false}
+      - {name: columns, label: Columns, widget: number, value_type: int, min: 1, max: 6, default: 3, required: false, hint: Phones show at most 2 columns.}
+      - {name: gap, label: Space between pictures (px), widget: number, value_type: int, min: 0, max: 60, default: 12, required: false}
+      - name: style
+        label: Block backdrop and position
+        widget: object
+        required: true
+        collapsed: true
+        fields:
+        - {name: backdrop, label: Backdrop, widget: select, options: [{label: None, value: none}, {label: White panel (sunken), value: panel}, {label: Grey panel (raised), value: raised}, {label: Window with title bar, value: window}, {label: Flat colour, value: flat}, {label: Outline only, value: outline}, {label: Dashed outline, value: dashed}], default: none, required: false, hint: What sits behind it. "Window" draws a Windows 95 window with a title bar.}
+        - {name: title, label: Window title, widget: string, required: false, hint: Only used by the "Window with title bar" backdrop.}
+        - {name: color, label: Backdrop colour, widget: color, allowInput: true, required: false, hint: Leave empty for the backdrop's normal colour. For outlines this is the line colour.}
+        - {name: opacity, label: Backdrop opacity (%), widget: number, value_type: int, min: 0, max: 100, default: 100, required: false, hint: '100 is solid, 0 is invisible. Text is never faded.'}
+        - {name: image, label: Backdrop picture, widget: image, required: false, hint: Optional picture drawn behind the text or media.}
+        - {name: imageMode, label: Backdrop picture layout, widget: select, options: [{label: Repeat as tiles, value: tile}, {label: Cover the whole box, value: cover}, {label: Fit inside, value: contain}, {label: 'Centre, original size', value: center}], default: tile, required: false}
+        - {name: padding, label: Space inside the backdrop, widget: select, options: [{label: Automatic, value: auto}, {label: None, value: none}, {label: Small, value: small}, {label: Medium, value: medium}, {label: Large, value: large}, {label: Extra large, value: xl}], default: auto, required: false}
+        - {name: width, label: Block width, widget: select, options: [{label: Full width, value: full}, {label: Wide (86%), value: wide}, {label: Medium (68%), value: medium}, {label: Narrow (48%), value: narrow}], default: full, required: false}
+        - {name: align, label: Block position, widget: select, options: [{label: Left, value: left}, {label: Centre, value: center}, {label: Right, value: right}], default: center, required: false, hint: Where a block that is not full width sits.}
+        - {name: spaceAbove, label: Extra space above (px), widget: number, value_type: int, min: -150, max: 300, default: 0, required: false, hint: Negative numbers pull the block up so it overlaps the one above.}
+        - {name: spaceBelow, label: Extra space below (px), widget: number, value_type: int, min: -150, max: 300, default: 0, required: false}
+        hint: The box behind the whole block, and where the block sits on the page.
+      - name: decorations
+        label: Decorations
+        label_singular: Decoration
+        widget: list
+        required: false
+        collapsed: true
+        minimize_collapsed: true
+        summary: '{{fields.image}}'
+        thumbnail: image
+        hint: 'Loose pictures placed on this block: stickers, ribbons, doodles. PNG or GIF with a see-through background works best.'
+        fields:
+        - {name: image, label: Picture, widget: image, required: false}
+        - {name: anchor, label: Attach to, widget: select, options: [{label: Top left, value: top-left}, {label: Top, value: top}, {label: Top right, value: top-right}, {label: Left, value: left}, {label: Centre, value: center}, {label: Right, value: right}, {label: Bottom left, value: bottom-left}, {label: Bottom, value: bottom}, {label: Bottom right, value: bottom-right}], default: top-left, required: false, hint: Which point of the block the picture is attached to. The matching point of the picture sits there.}
+        - {name: x, label: Move right (px), widget: number, value_type: int, min: -1500, max: 1500, default: 0, required: false, hint: Negative numbers move it left.}
+        - {name: y, label: Move down (px), widget: number, value_type: int, min: -1500, max: 1500, default: 0, required: false, hint: Negative numbers move it up.}
+        - {name: width, label: Width (px), widget: number, value_type: int, min: 8, max: 1600, default: 140, required: false, hint: Shrinks to 60% on phones.}
+        - {name: rotate, label: Rotate (degrees), widget: number, value_type: int, min: -180, max: 180, default: 0, required: false}
+        - {name: opacity, label: Opacity (%), widget: number, value_type: int, min: 0, max: 100, default: 100, required: false}
+        - {name: flip, label: Mirror left to right, widget: boolean, default: false, required: false}
+        - {name: layer, label: Layer, widget: select, options: [{label: Behind the backdrop, value: behind}, {label: 'On the backdrop, behind the text', value: middle}, {label: In front of everything, value: front}], default: front, required: false}
+    - name: divider
+      label: Divider line
+      widget: object
+      summary: Divider ({{fields.kind}})
+      fields:
+      - {name: kind, label: Style, widget: select, options: [{label: Grooved (Windows 95), value: groove}, {label: Solid line, value: line}, {label: Dotted, value: dotted}, {label: Dashed, value: dashed}, {label: Row of stars, value: stars}], default: groove, required: false}
+      - {name: color, label: Colour, widget: color, allowInput: true, required: false}
+      - {name: thickness, label: Thickness (px), widget: number, value_type: int, min: 1, max: 12, default: 2, required: false}
+      - {name: width, label: Width (%), widget: number, value_type: int, min: 10, max: 100, default: 100, required: false}
+      - {name: spaceAbove, label: Extra space above (px), widget: number, value_type: int, min: -150, max: 300, default: 0, required: false}
+      - {name: spaceBelow, label: Extra space below (px), widget: number, value_type: int, min: -150, max: 300, default: 0, required: false}
+    - name: spacer
+      label: Empty space (or decoration area)
+      widget: object
+      summary: Space, {{fields.height}}px
+      fields:
+      - {name: height, label: Height (px), widget: number, value_type: int, min: 0, max: 1000, default: 60, required: false, hint: An empty area. Add decorations to use it as a free canvas for stickers.}
+      - name: style
+        label: Block backdrop and position
+        widget: object
+        required: true
+        collapsed: true
+        fields:
+        - {name: backdrop, label: Backdrop, widget: select, options: [{label: None, value: none}, {label: White panel (sunken), value: panel}, {label: Grey panel (raised), value: raised}, {label: Window with title bar, value: window}, {label: Flat colour, value: flat}, {label: Outline only, value: outline}, {label: Dashed outline, value: dashed}], default: none, required: false, hint: What sits behind it. "Window" draws a Windows 95 window with a title bar.}
+        - {name: title, label: Window title, widget: string, required: false, hint: Only used by the "Window with title bar" backdrop.}
+        - {name: color, label: Backdrop colour, widget: color, allowInput: true, required: false, hint: Leave empty for the backdrop's normal colour. For outlines this is the line colour.}
+        - {name: opacity, label: Backdrop opacity (%), widget: number, value_type: int, min: 0, max: 100, default: 100, required: false, hint: '100 is solid, 0 is invisible. Text is never faded.'}
+        - {name: image, label: Backdrop picture, widget: image, required: false, hint: Optional picture drawn behind the text or media.}
+        - {name: imageMode, label: Backdrop picture layout, widget: select, options: [{label: Repeat as tiles, value: tile}, {label: Cover the whole box, value: cover}, {label: Fit inside, value: contain}, {label: 'Centre, original size', value: center}], default: tile, required: false}
+        - {name: padding, label: Space inside the backdrop, widget: select, options: [{label: Automatic, value: auto}, {label: None, value: none}, {label: Small, value: small}, {label: Medium, value: medium}, {label: Large, value: large}, {label: Extra large, value: xl}], default: auto, required: false}
+        - {name: width, label: Block width, widget: select, options: [{label: Full width, value: full}, {label: Wide (86%), value: wide}, {label: Medium (68%), value: medium}, {label: Narrow (48%), value: narrow}], default: full, required: false}
+        - {name: align, label: Block position, widget: select, options: [{label: Left, value: left}, {label: Centre, value: center}, {label: Right, value: right}], default: center, required: false, hint: Where a block that is not full width sits.}
+        - {name: spaceAbove, label: Extra space above (px), widget: number, value_type: int, min: -150, max: 300, default: 0, required: false, hint: Negative numbers pull the block up so it overlaps the one above.}
+        - {name: spaceBelow, label: Extra space below (px), widget: number, value_type: int, min: -150, max: 300, default: 0, required: false}
+        hint: The box behind the whole block, and where the block sits on the page.
+      - name: decorations
+        label: Decorations
+        label_singular: Decoration
+        widget: list
+        required: false
+        collapsed: true
+        minimize_collapsed: true
+        summary: '{{fields.image}}'
+        thumbnail: image
+        hint: 'Loose pictures placed on this block: stickers, ribbons, doodles. PNG or GIF with a see-through background works best.'
+        fields:
+        - {name: image, label: Picture, widget: image, required: false}
+        - {name: anchor, label: Attach to, widget: select, options: [{label: Top left, value: top-left}, {label: Top, value: top}, {label: Top right, value: top-right}, {label: Left, value: left}, {label: Centre, value: center}, {label: Right, value: right}, {label: Bottom left, value: bottom-left}, {label: Bottom, value: bottom}, {label: Bottom right, value: bottom-right}], default: top-left, required: false, hint: Which point of the block the picture is attached to. The matching point of the picture sits there.}
+        - {name: x, label: Move right (px), widget: number, value_type: int, min: -1500, max: 1500, default: 0, required: false, hint: Negative numbers move it left.}
+        - {name: y, label: Move down (px), widget: number, value_type: int, min: -1500, max: 1500, default: 0, required: false, hint: Negative numbers move it up.}
+        - {name: width, label: Width (px), widget: number, value_type: int, min: 8, max: 1600, default: 140, required: false, hint: Shrinks to 60% on phones.}
+        - {name: rotate, label: Rotate (degrees), widget: number, value_type: int, min: -180, max: 180, default: 0, required: false}
+        - {name: opacity, label: Opacity (%), widget: number, value_type: int, min: 0, max: 100, default: 100, required: false}
+        - {name: flip, label: Mirror left to right, widget: boolean, default: false, required: false}
+        - {name: layer, label: Layer, widget: select, options: [{label: Behind the backdrop, value: behind}, {label: 'On the backdrop, behind the text', value: middle}, {label: In front of everything, value: front}], default: front, required: false}
+    - name: buttons
+      label: Buttons (links)
+      widget: object
+      summary: Buttons
+      fields:
+      - name: items
+        label: Buttons
+        label_singular: Button
+        widget: list
+        required: false
+        summary: '{{fields.label}}'
+        collapsed: auto
+        fields:
+        - {name: label, label: Label, widget: string, required: false}
+        - {name: url, label: Link, widget: string, required: false, hint: 'A full web address, mailto: link, or a page on this site such as /projects/jojo-foolery/'}
+        - {name: newTab, label: Open in a new tab, widget: boolean, default: false, required: false}
+      - {name: align, label: Position, widget: select, options: [{label: Left, value: left}, {label: Centre, value: center}, {label: Right, value: right}], default: center, required: false}
+      - name: style
+        label: Block backdrop and position
+        widget: object
+        required: true
+        collapsed: true
+        fields:
+        - {name: backdrop, label: Backdrop, widget: select, options: [{label: None, value: none}, {label: White panel (sunken), value: panel}, {label: Grey panel (raised), value: raised}, {label: Window with title bar, value: window}, {label: Flat colour, value: flat}, {label: Outline only, value: outline}, {label: Dashed outline, value: dashed}], default: none, required: false, hint: What sits behind it. "Window" draws a Windows 95 window with a title bar.}
+        - {name: title, label: Window title, widget: string, required: false, hint: Only used by the "Window with title bar" backdrop.}
+        - {name: color, label: Backdrop colour, widget: color, allowInput: true, required: false, hint: Leave empty for the backdrop's normal colour. For outlines this is the line colour.}
+        - {name: opacity, label: Backdrop opacity (%), widget: number, value_type: int, min: 0, max: 100, default: 100, required: false, hint: '100 is solid, 0 is invisible. Text is never faded.'}
+        - {name: image, label: Backdrop picture, widget: image, required: false, hint: Optional picture drawn behind the text or media.}
+        - {name: imageMode, label: Backdrop picture layout, widget: select, options: [{label: Repeat as tiles, value: tile}, {label: Cover the whole box, value: cover}, {label: Fit inside, value: contain}, {label: 'Centre, original size', value: center}], default: tile, required: false}
+        - {name: padding, label: Space inside the backdrop, widget: select, options: [{label: Automatic, value: auto}, {label: None, value: none}, {label: Small, value: small}, {label: Medium, value: medium}, {label: Large, value: large}, {label: Extra large, value: xl}], default: auto, required: false}
+        - {name: width, label: Block width, widget: select, options: [{label: Full width, value: full}, {label: Wide (86%), value: wide}, {label: Medium (68%), value: medium}, {label: Narrow (48%), value: narrow}], default: full, required: false}
+        - {name: align, label: Block position, widget: select, options: [{label: Left, value: left}, {label: Centre, value: center}, {label: Right, value: right}], default: center, required: false, hint: Where a block that is not full width sits.}
+        - {name: spaceAbove, label: Extra space above (px), widget: number, value_type: int, min: -150, max: 300, default: 0, required: false, hint: Negative numbers pull the block up so it overlaps the one above.}
+        - {name: spaceBelow, label: Extra space below (px), widget: number, value_type: int, min: -150, max: 300, default: 0, required: false}
+        hint: The box behind the whole block, and where the block sits on the page.
+      - name: decorations
+        label: Decorations
+        label_singular: Decoration
+        widget: list
+        required: false
+        collapsed: true
+        minimize_collapsed: true
+        summary: '{{fields.image}}'
+        thumbnail: image
+        hint: 'Loose pictures placed on this block: stickers, ribbons, doodles. PNG or GIF with a see-through background works best.'
+        fields:
+        - {name: image, label: Picture, widget: image, required: false}
+        - {name: anchor, label: Attach to, widget: select, options: [{label: Top left, value: top-left}, {label: Top, value: top}, {label: Top right, value: top-right}, {label: Left, value: left}, {label: Centre, value: center}, {label: Right, value: right}, {label: Bottom left, value: bottom-left}, {label: Bottom, value: bottom}, {label: Bottom right, value: bottom-right}], default: top-left, required: false, hint: Which point of the block the picture is attached to. The matching point of the picture sits there.}
+        - {name: x, label: Move right (px), widget: number, value_type: int, min: -1500, max: 1500, default: 0, required: false, hint: Negative numbers move it left.}
+        - {name: y, label: Move down (px), widget: number, value_type: int, min: -1500, max: 1500, default: 0, required: false, hint: Negative numbers move it up.}
+        - {name: width, label: Width (px), widget: number, value_type: int, min: 8, max: 1600, default: 140, required: false, hint: Shrinks to 60% on phones.}
+        - {name: rotate, label: Rotate (degrees), widget: number, value_type: int, min: -180, max: 180, default: 0, required: false}
+        - {name: opacity, label: Opacity (%), widget: number, value_type: int, min: 0, max: 100, default: 100, required: false}
+        - {name: flip, label: Mirror left to right, widget: boolean, default: false, required: false}
+        - {name: layer, label: Layer, widget: select, options: [{label: Behind the backdrop, value: behind}, {label: 'On the backdrop, behind the text', value: middle}, {label: In front of everything, value: front}], default: front, required: false}
+- name: entries
+  label: Entries
+  label_singular: Entry
+  folder: src/content/entries
+  path: '{{project}}/{{slug}}'
+  extension: md
+  format: frontmatter
+  create: true
+  slug: '{{title}}'
+  media_folder: /public/media
+  public_folder: /media
+  summary: '{{title}} ({{project}})'
+  fields:
+  - {name: project, label: Project, widget: relation, collection: projects, value_field: '{{slug}}', search_fields: [title], display_fields: [title], hint: Which project this entry belongs to. Changing it later does not move the entry.}
+  - {name: title, label: Title, widget: string}
+  - {name: summary, label: Short summary, widget: text, required: false}
+  - {name: date, label: Date, widget: datetime, date_format: YYYY-MM-DD, time_format: false}
+  - {name: categories, label: Categories, widget: relation, collection: categories, value_field: '{{slug}}', search_fields: [title], display_fields: [title], multiple: true, required: false, hint: Pick one or more. The entry is listed under each of them on the project page. Use "Add Category" to create a new one.}
+  - name: keyPoints
+    label: Key points
+    widget: list
+    required: false
+    field: {name: keyPoint, label: Key point, widget: string}
+    hint: Groups on the main page, for example Battlegrounds moves.
+  - {name: thumbnail, label: Thumbnail, widget: image, required: false, media_folder: /src/assets/uploads, public_folder: ../../../assets/uploads}
+  - {name: draft, label: Draft (hidden on the live site), widget: boolean, default: false}
+  - {name: gradientTop, label: Title bar colour (top), widget: color, required: false, hint: Leave empty to use the project's colours.}
+  - {name: gradientBottom, label: Title bar colour (bottom), widget: color, required: false}
+  - {name: body, label: Text, widget: markdown, required: false, hint: Plain text in a white box at the top of the page. Leave empty to skip it and use only the blocks below.}
+  - name: page
+    label: Page settings
+    widget: object
+    required: false
+    collapsed: true
     fields:
-      - { name: project, label: Project, widget: relation, collection: projects, value_field: '{{slug}}', search_fields: [title], display_fields: [title], hint: 'Which project this entry belongs to. Changing it later does not move the entry.' }
-      - { name: title, label: Title, widget: string }
-      - { name: summary, label: Short summary, widget: text, required: false }
-      - { name: date, label: Date, widget: datetime, date_format: 'YYYY-MM-DD', time_format: false }
-      - { name: category, label: Category, widget: string, default: Other, hint: 'Groups entries on the project page, for example Animation or Visual Effects.' }
-      - { name: keyPoints, label: Key points, widget: list, required: false, field: { name: keyPoint, label: Key point, widget: string }, hint: 'Groups on the main page, for example Battlegrounds moves.' }
-      - { name: thumbnail, label: Thumbnail, widget: image, required: false, media_folder: /src/assets/uploads, public_folder: ../../../assets/uploads }
-      - { name: draft, label: Draft (hidden on the live site), widget: boolean, default: false }
-      - { name: body, label: Text, widget: markdown }
+    - {name: desktopColor, label: Background colour, widget: color, allowInput: true, required: false, hint: The colour behind the windows. Leave empty for the site default.}
+    - {name: desktopImage, label: Background picture, widget: image, required: false}
+    - {name: desktopImageMode, label: Background picture layout, widget: select, options: [{label: Repeat as tiles, value: tile}, {label: Cover the page, value: cover}, {label: 'Centre, original size', value: center}, {label: 'Plain colour: hide the pattern', value: none}], default: tile, required: false, hint: Pick "Plain colour" to remove the site's pattern without adding a picture.}
+    - {name: windowWidth, label: Window width, widget: select, required: false, options: [{label: Narrow, value: narrow}, {label: Medium, value: medium}, {label: Wide, value: wide}, {label: Full screen, value: full}], hint: 'Leave empty for the default (entries are medium, projects are wide).'}
+    hint: Background and width for this page only.
+  - name: blocks
+    label: Page layout blocks
+    label_singular: Block
+    widget: list
+    required: false
+    typeKey: type
+    collapsed: auto
+    summary: '{{fields.type}}'
+    hint: Build the page from blocks, top to bottom. Use the arrows to reorder them. They appear below the Text above.
+    types:
+    - name: content
+      label: Text and media
+      widget: object
+      summary: '{{fields.text}}'
+      fields:
+      - {name: text, label: Text, widget: markdown, required: false}
+      - name: media
+        label: Pictures, videos, sound
+        label_singular: Media item
+        widget: list
+        required: false
+        collapsed: auto
+        summary: '{{fields.caption}} {{fields.src}}'
+        thumbnail: src
+        hint: Shown beside or above/below the text. Leave empty for a text-only block, or leave the text empty to show only media.
+        fields:
+        - {name: src, label: File or link, widget: file, accept: 'image/*,video/*,audio/*', required: false, hint: 'Upload an image, mp4 video or mp3 sound file, or choose "Enter URL" and paste a link: YouTube, Vimeo, TikTok, Instagram, Streamable, Dailymotion, Google Drive, Spotify or SoundCloud.'}
+        - {name: caption, label: Caption, widget: string, required: false}
+        - {name: alt, label: Description for screen readers, widget: string, required: false}
+        - {name: frame, label: Frame, widget: select, options: [{label: No frame, value: none}, {label: Raised grey frame, value: raised}, {label: Sunken white frame, value: sunken}, {label: Black outline, value: outline}], default: none, required: false}
+        - {name: size, label: Size (% of its column), widget: number, value_type: int, min: 10, max: 100, default: 100, required: false}
+        - {name: align, label: Position in its column, widget: select, options: [{label: Left, value: left}, {label: Centre, value: center}, {label: Right, value: right}], default: center, required: false}
+      - {name: mediaSide, label: Media position, widget: select, options: [{label: 'Beside the text, on the right', value: right}, {label: 'Beside the text, on the left', value: left}, {label: Above the text, value: above}, {label: Below the text, value: below}], default: right, required: false}
+      - {name: mediaWidth, label: Media column width (%), widget: number, value_type: int, min: 15, max: 85, default: 45, required: false, hint: Only for left and right.}
+      - {name: valign, label: Line up with, widget: select, options: [{label: Top, value: top}, {label: Middle, value: center}, {label: Bottom, value: bottom}], default: top, required: false, hint: Where the shorter side sits next to the taller one.}
+      - {name: gap, label: Space between text and media (px), widget: number, value_type: int, min: 0, max: 120, default: 20, required: false}
+      - name: textBox
+        label: Text backdrop and style
+        widget: object
+        required: true
+        collapsed: true
+        fields:
+        - {name: backdrop, label: Backdrop, widget: select, options: [{label: None, value: none}, {label: White panel (sunken), value: panel}, {label: Grey panel (raised), value: raised}, {label: Window with title bar, value: window}, {label: Flat colour, value: flat}, {label: Outline only, value: outline}, {label: Dashed outline, value: dashed}], default: none, required: false, hint: What sits behind it. "Window" draws a Windows 95 window with a title bar.}
+        - {name: title, label: Window title, widget: string, required: false, hint: Only used by the "Window with title bar" backdrop.}
+        - {name: color, label: Backdrop colour, widget: color, allowInput: true, required: false, hint: Leave empty for the backdrop's normal colour. For outlines this is the line colour.}
+        - {name: opacity, label: Backdrop opacity (%), widget: number, value_type: int, min: 0, max: 100, default: 100, required: false, hint: '100 is solid, 0 is invisible. Text is never faded.'}
+        - {name: image, label: Backdrop picture, widget: image, required: false, hint: Optional picture drawn behind the text or media.}
+        - {name: imageMode, label: Backdrop picture layout, widget: select, options: [{label: Repeat as tiles, value: tile}, {label: Cover the whole box, value: cover}, {label: Fit inside, value: contain}, {label: 'Centre, original size', value: center}], default: tile, required: false}
+        - {name: padding, label: Space inside the backdrop, widget: select, options: [{label: Automatic, value: auto}, {label: None, value: none}, {label: Small, value: small}, {label: Medium, value: medium}, {label: Large, value: large}, {label: Extra large, value: xl}], default: auto, required: false}
+        - {name: textColor, label: Text colour, widget: color, allowInput: true, required: false}
+        - {name: font, label: Font, widget: select, options: [{label: Comic Sans (site default), value: default}, {label: Sans-serif, value: sans}, {label: Serif, value: serif}, {label: Monospace, value: mono}, {label: Handwriting, value: cursive}], default: default, required: false}
+        - {name: size, label: Text size, widget: select, options: [{label: Small, value: small}, {label: Normal, value: normal}, {label: Large, value: large}, {label: Huge, value: huge}], default: normal, required: false}
+        - {name: align, label: Text alignment, widget: select, options: [{label: Left, value: left}, {label: Centre, value: center}, {label: Right, value: right}], default: left, required: false}
+        hint: The box behind just the text, and how the text looks.
+      - name: style
+        label: Block backdrop and position
+        widget: object
+        required: true
+        collapsed: true
+        fields:
+        - {name: backdrop, label: Backdrop, widget: select, options: [{label: None, value: none}, {label: White panel (sunken), value: panel}, {label: Grey panel (raised), value: raised}, {label: Window with title bar, value: window}, {label: Flat colour, value: flat}, {label: Outline only, value: outline}, {label: Dashed outline, value: dashed}], default: none, required: false, hint: What sits behind it. "Window" draws a Windows 95 window with a title bar.}
+        - {name: title, label: Window title, widget: string, required: false, hint: Only used by the "Window with title bar" backdrop.}
+        - {name: color, label: Backdrop colour, widget: color, allowInput: true, required: false, hint: Leave empty for the backdrop's normal colour. For outlines this is the line colour.}
+        - {name: opacity, label: Backdrop opacity (%), widget: number, value_type: int, min: 0, max: 100, default: 100, required: false, hint: '100 is solid, 0 is invisible. Text is never faded.'}
+        - {name: image, label: Backdrop picture, widget: image, required: false, hint: Optional picture drawn behind the text or media.}
+        - {name: imageMode, label: Backdrop picture layout, widget: select, options: [{label: Repeat as tiles, value: tile}, {label: Cover the whole box, value: cover}, {label: Fit inside, value: contain}, {label: 'Centre, original size', value: center}], default: tile, required: false}
+        - {name: padding, label: Space inside the backdrop, widget: select, options: [{label: Automatic, value: auto}, {label: None, value: none}, {label: Small, value: small}, {label: Medium, value: medium}, {label: Large, value: large}, {label: Extra large, value: xl}], default: auto, required: false}
+        - {name: width, label: Block width, widget: select, options: [{label: Full width, value: full}, {label: Wide (86%), value: wide}, {label: Medium (68%), value: medium}, {label: Narrow (48%), value: narrow}], default: full, required: false}
+        - {name: align, label: Block position, widget: select, options: [{label: Left, value: left}, {label: Centre, value: center}, {label: Right, value: right}], default: center, required: false, hint: Where a block that is not full width sits.}
+        - {name: spaceAbove, label: Extra space above (px), widget: number, value_type: int, min: -150, max: 300, default: 0, required: false, hint: Negative numbers pull the block up so it overlaps the one above.}
+        - {name: spaceBelow, label: Extra space below (px), widget: number, value_type: int, min: -150, max: 300, default: 0, required: false}
+        hint: The box behind the whole block, and where the block sits on the page.
+      - name: decorations
+        label: Decorations
+        label_singular: Decoration
+        widget: list
+        required: false
+        collapsed: true
+        minimize_collapsed: true
+        summary: '{{fields.image}}'
+        thumbnail: image
+        hint: 'Loose pictures placed on this block: stickers, ribbons, doodles. PNG or GIF with a see-through background works best.'
+        fields:
+        - {name: image, label: Picture, widget: image, required: false}
+        - {name: anchor, label: Attach to, widget: select, options: [{label: Top left, value: top-left}, {label: Top, value: top}, {label: Top right, value: top-right}, {label: Left, value: left}, {label: Centre, value: center}, {label: Right, value: right}, {label: Bottom left, value: bottom-left}, {label: Bottom, value: bottom}, {label: Bottom right, value: bottom-right}], default: top-left, required: false, hint: Which point of the block the picture is attached to. The matching point of the picture sits there.}
+        - {name: x, label: Move right (px), widget: number, value_type: int, min: -1500, max: 1500, default: 0, required: false, hint: Negative numbers move it left.}
+        - {name: y, label: Move down (px), widget: number, value_type: int, min: -1500, max: 1500, default: 0, required: false, hint: Negative numbers move it up.}
+        - {name: width, label: Width (px), widget: number, value_type: int, min: 8, max: 1600, default: 140, required: false, hint: Shrinks to 60% on phones.}
+        - {name: rotate, label: Rotate (degrees), widget: number, value_type: int, min: -180, max: 180, default: 0, required: false}
+        - {name: opacity, label: Opacity (%), widget: number, value_type: int, min: 0, max: 100, default: 100, required: false}
+        - {name: flip, label: Mirror left to right, widget: boolean, default: false, required: false}
+        - {name: layer, label: Layer, widget: select, options: [{label: Behind the backdrop, value: behind}, {label: 'On the backdrop, behind the text', value: middle}, {label: In front of everything, value: front}], default: front, required: false}
+    - name: gallery
+      label: Picture gallery
+      widget: object
+      summary: Gallery
+      fields:
+      - name: images
+        label: Pictures
+        label_singular: Picture
+        widget: list
+        required: false
+        collapsed: auto
+        summary: '{{fields.caption}} {{fields.src}}'
+        thumbnail: src
+        hint: Pictures or videos laid out in a grid.
+        fields:
+        - {name: src, label: File or link, widget: file, accept: 'image/*,video/*,audio/*', required: false, hint: 'Upload an image, mp4 video or mp3 sound file, or choose "Enter URL" and paste a link: YouTube, Vimeo, TikTok, Instagram, Streamable, Dailymotion, Google Drive, Spotify or SoundCloud.'}
+        - {name: caption, label: Caption, widget: string, required: false}
+        - {name: alt, label: Description for screen readers, widget: string, required: false}
+        - {name: frame, label: Frame, widget: select, options: [{label: No frame, value: none}, {label: Raised grey frame, value: raised}, {label: Sunken white frame, value: sunken}, {label: Black outline, value: outline}], default: none, required: false}
+        - {name: size, label: Size (% of its column), widget: number, value_type: int, min: 10, max: 100, default: 100, required: false}
+        - {name: align, label: Position in its column, widget: select, options: [{label: Left, value: left}, {label: Centre, value: center}, {label: Right, value: right}], default: center, required: false}
+      - {name: columns, label: Columns, widget: number, value_type: int, min: 1, max: 6, default: 3, required: false, hint: Phones show at most 2 columns.}
+      - {name: gap, label: Space between pictures (px), widget: number, value_type: int, min: 0, max: 60, default: 12, required: false}
+      - name: style
+        label: Block backdrop and position
+        widget: object
+        required: true
+        collapsed: true
+        fields:
+        - {name: backdrop, label: Backdrop, widget: select, options: [{label: None, value: none}, {label: White panel (sunken), value: panel}, {label: Grey panel (raised), value: raised}, {label: Window with title bar, value: window}, {label: Flat colour, value: flat}, {label: Outline only, value: outline}, {label: Dashed outline, value: dashed}], default: none, required: false, hint: What sits behind it. "Window" draws a Windows 95 window with a title bar.}
+        - {name: title, label: Window title, widget: string, required: false, hint: Only used by the "Window with title bar" backdrop.}
+        - {name: color, label: Backdrop colour, widget: color, allowInput: true, required: false, hint: Leave empty for the backdrop's normal colour. For outlines this is the line colour.}
+        - {name: opacity, label: Backdrop opacity (%), widget: number, value_type: int, min: 0, max: 100, default: 100, required: false, hint: '100 is solid, 0 is invisible. Text is never faded.'}
+        - {name: image, label: Backdrop picture, widget: image, required: false, hint: Optional picture drawn behind the text or media.}
+        - {name: imageMode, label: Backdrop picture layout, widget: select, options: [{label: Repeat as tiles, value: tile}, {label: Cover the whole box, value: cover}, {label: Fit inside, value: contain}, {label: 'Centre, original size', value: center}], default: tile, required: false}
+        - {name: padding, label: Space inside the backdrop, widget: select, options: [{label: Automatic, value: auto}, {label: None, value: none}, {label: Small, value: small}, {label: Medium, value: medium}, {label: Large, value: large}, {label: Extra large, value: xl}], default: auto, required: false}
+        - {name: width, label: Block width, widget: select, options: [{label: Full width, value: full}, {label: Wide (86%), value: wide}, {label: Medium (68%), value: medium}, {label: Narrow (48%), value: narrow}], default: full, required: false}
+        - {name: align, label: Block position, widget: select, options: [{label: Left, value: left}, {label: Centre, value: center}, {label: Right, value: right}], default: center, required: false, hint: Where a block that is not full width sits.}
+        - {name: spaceAbove, label: Extra space above (px), widget: number, value_type: int, min: -150, max: 300, default: 0, required: false, hint: Negative numbers pull the block up so it overlaps the one above.}
+        - {name: spaceBelow, label: Extra space below (px), widget: number, value_type: int, min: -150, max: 300, default: 0, required: false}
+        hint: The box behind the whole block, and where the block sits on the page.
+      - name: decorations
+        label: Decorations
+        label_singular: Decoration
+        widget: list
+        required: false
+        collapsed: true
+        minimize_collapsed: true
+        summary: '{{fields.image}}'
+        thumbnail: image
+        hint: 'Loose pictures placed on this block: stickers, ribbons, doodles. PNG or GIF with a see-through background works best.'
+        fields:
+        - {name: image, label: Picture, widget: image, required: false}
+        - {name: anchor, label: Attach to, widget: select, options: [{label: Top left, value: top-left}, {label: Top, value: top}, {label: Top right, value: top-right}, {label: Left, value: left}, {label: Centre, value: center}, {label: Right, value: right}, {label: Bottom left, value: bottom-left}, {label: Bottom, value: bottom}, {label: Bottom right, value: bottom-right}], default: top-left, required: false, hint: Which point of the block the picture is attached to. The matching point of the picture sits there.}
+        - {name: x, label: Move right (px), widget: number, value_type: int, min: -1500, max: 1500, default: 0, required: false, hint: Negative numbers move it left.}
+        - {name: y, label: Move down (px), widget: number, value_type: int, min: -1500, max: 1500, default: 0, required: false, hint: Negative numbers move it up.}
+        - {name: width, label: Width (px), widget: number, value_type: int, min: 8, max: 1600, default: 140, required: false, hint: Shrinks to 60% on phones.}
+        - {name: rotate, label: Rotate (degrees), widget: number, value_type: int, min: -180, max: 180, default: 0, required: false}
+        - {name: opacity, label: Opacity (%), widget: number, value_type: int, min: 0, max: 100, default: 100, required: false}
+        - {name: flip, label: Mirror left to right, widget: boolean, default: false, required: false}
+        - {name: layer, label: Layer, widget: select, options: [{label: Behind the backdrop, value: behind}, {label: 'On the backdrop, behind the text', value: middle}, {label: In front of everything, value: front}], default: front, required: false}
+    - name: divider
+      label: Divider line
+      widget: object
+      summary: Divider ({{fields.kind}})
+      fields:
+      - {name: kind, label: Style, widget: select, options: [{label: Grooved (Windows 95), value: groove}, {label: Solid line, value: line}, {label: Dotted, value: dotted}, {label: Dashed, value: dashed}, {label: Row of stars, value: stars}], default: groove, required: false}
+      - {name: color, label: Colour, widget: color, allowInput: true, required: false}
+      - {name: thickness, label: Thickness (px), widget: number, value_type: int, min: 1, max: 12, default: 2, required: false}
+      - {name: width, label: Width (%), widget: number, value_type: int, min: 10, max: 100, default: 100, required: false}
+      - {name: spaceAbove, label: Extra space above (px), widget: number, value_type: int, min: -150, max: 300, default: 0, required: false}
+      - {name: spaceBelow, label: Extra space below (px), widget: number, value_type: int, min: -150, max: 300, default: 0, required: false}
+    - name: spacer
+      label: Empty space (or decoration area)
+      widget: object
+      summary: Space, {{fields.height}}px
+      fields:
+      - {name: height, label: Height (px), widget: number, value_type: int, min: 0, max: 1000, default: 60, required: false, hint: An empty area. Add decorations to use it as a free canvas for stickers.}
+      - name: style
+        label: Block backdrop and position
+        widget: object
+        required: true
+        collapsed: true
+        fields:
+        - {name: backdrop, label: Backdrop, widget: select, options: [{label: None, value: none}, {label: White panel (sunken), value: panel}, {label: Grey panel (raised), value: raised}, {label: Window with title bar, value: window}, {label: Flat colour, value: flat}, {label: Outline only, value: outline}, {label: Dashed outline, value: dashed}], default: none, required: false, hint: What sits behind it. "Window" draws a Windows 95 window with a title bar.}
+        - {name: title, label: Window title, widget: string, required: false, hint: Only used by the "Window with title bar" backdrop.}
+        - {name: color, label: Backdrop colour, widget: color, allowInput: true, required: false, hint: Leave empty for the backdrop's normal colour. For outlines this is the line colour.}
+        - {name: opacity, label: Backdrop opacity (%), widget: number, value_type: int, min: 0, max: 100, default: 100, required: false, hint: '100 is solid, 0 is invisible. Text is never faded.'}
+        - {name: image, label: Backdrop picture, widget: image, required: false, hint: Optional picture drawn behind the text or media.}
+        - {name: imageMode, label: Backdrop picture layout, widget: select, options: [{label: Repeat as tiles, value: tile}, {label: Cover the whole box, value: cover}, {label: Fit inside, value: contain}, {label: 'Centre, original size', value: center}], default: tile, required: false}
+        - {name: padding, label: Space inside the backdrop, widget: select, options: [{label: Automatic, value: auto}, {label: None, value: none}, {label: Small, value: small}, {label: Medium, value: medium}, {label: Large, value: large}, {label: Extra large, value: xl}], default: auto, required: false}
+        - {name: width, label: Block width, widget: select, options: [{label: Full width, value: full}, {label: Wide (86%), value: wide}, {label: Medium (68%), value: medium}, {label: Narrow (48%), value: narrow}], default: full, required: false}
+        - {name: align, label: Block position, widget: select, options: [{label: Left, value: left}, {label: Centre, value: center}, {label: Right, value: right}], default: center, required: false, hint: Where a block that is not full width sits.}
+        - {name: spaceAbove, label: Extra space above (px), widget: number, value_type: int, min: -150, max: 300, default: 0, required: false, hint: Negative numbers pull the block up so it overlaps the one above.}
+        - {name: spaceBelow, label: Extra space below (px), widget: number, value_type: int, min: -150, max: 300, default: 0, required: false}
+        hint: The box behind the whole block, and where the block sits on the page.
+      - name: decorations
+        label: Decorations
+        label_singular: Decoration
+        widget: list
+        required: false
+        collapsed: true
+        minimize_collapsed: true
+        summary: '{{fields.image}}'
+        thumbnail: image
+        hint: 'Loose pictures placed on this block: stickers, ribbons, doodles. PNG or GIF with a see-through background works best.'
+        fields:
+        - {name: image, label: Picture, widget: image, required: false}
+        - {name: anchor, label: Attach to, widget: select, options: [{label: Top left, value: top-left}, {label: Top, value: top}, {label: Top right, value: top-right}, {label: Left, value: left}, {label: Centre, value: center}, {label: Right, value: right}, {label: Bottom left, value: bottom-left}, {label: Bottom, value: bottom}, {label: Bottom right, value: bottom-right}], default: top-left, required: false, hint: Which point of the block the picture is attached to. The matching point of the picture sits there.}
+        - {name: x, label: Move right (px), widget: number, value_type: int, min: -1500, max: 1500, default: 0, required: false, hint: Negative numbers move it left.}
+        - {name: y, label: Move down (px), widget: number, value_type: int, min: -1500, max: 1500, default: 0, required: false, hint: Negative numbers move it up.}
+        - {name: width, label: Width (px), widget: number, value_type: int, min: 8, max: 1600, default: 140, required: false, hint: Shrinks to 60% on phones.}
+        - {name: rotate, label: Rotate (degrees), widget: number, value_type: int, min: -180, max: 180, default: 0, required: false}
+        - {name: opacity, label: Opacity (%), widget: number, value_type: int, min: 0, max: 100, default: 100, required: false}
+        - {name: flip, label: Mirror left to right, widget: boolean, default: false, required: false}
+        - {name: layer, label: Layer, widget: select, options: [{label: Behind the backdrop, value: behind}, {label: 'On the backdrop, behind the text', value: middle}, {label: In front of everything, value: front}], default: front, required: false}
+    - name: buttons
+      label: Buttons (links)
+      widget: object
+      summary: Buttons
+      fields:
+      - name: items
+        label: Buttons
+        label_singular: Button
+        widget: list
+        required: false
+        summary: '{{fields.label}}'
+        collapsed: auto
+        fields:
+        - {name: label, label: Label, widget: string, required: false}
+        - {name: url, label: Link, widget: string, required: false, hint: 'A full web address, mailto: link, or a page on this site such as /projects/jojo-foolery/'}
+        - {name: newTab, label: Open in a new tab, widget: boolean, default: false, required: false}
+      - {name: align, label: Position, widget: select, options: [{label: Left, value: left}, {label: Centre, value: center}, {label: Right, value: right}], default: center, required: false}
+      - name: style
+        label: Block backdrop and position
+        widget: object
+        required: true
+        collapsed: true
+        fields:
+        - {name: backdrop, label: Backdrop, widget: select, options: [{label: None, value: none}, {label: White panel (sunken), value: panel}, {label: Grey panel (raised), value: raised}, {label: Window with title bar, value: window}, {label: Flat colour, value: flat}, {label: Outline only, value: outline}, {label: Dashed outline, value: dashed}], default: none, required: false, hint: What sits behind it. "Window" draws a Windows 95 window with a title bar.}
+        - {name: title, label: Window title, widget: string, required: false, hint: Only used by the "Window with title bar" backdrop.}
+        - {name: color, label: Backdrop colour, widget: color, allowInput: true, required: false, hint: Leave empty for the backdrop's normal colour. For outlines this is the line colour.}
+        - {name: opacity, label: Backdrop opacity (%), widget: number, value_type: int, min: 0, max: 100, default: 100, required: false, hint: '100 is solid, 0 is invisible. Text is never faded.'}
+        - {name: image, label: Backdrop picture, widget: image, required: false, hint: Optional picture drawn behind the text or media.}
+        - {name: imageMode, label: Backdrop picture layout, widget: select, options: [{label: Repeat as tiles, value: tile}, {label: Cover the whole box, value: cover}, {label: Fit inside, value: contain}, {label: 'Centre, original size', value: center}], default: tile, required: false}
+        - {name: padding, label: Space inside the backdrop, widget: select, options: [{label: Automatic, value: auto}, {label: None, value: none}, {label: Small, value: small}, {label: Medium, value: medium}, {label: Large, value: large}, {label: Extra large, value: xl}], default: auto, required: false}
+        - {name: width, label: Block width, widget: select, options: [{label: Full width, value: full}, {label: Wide (86%), value: wide}, {label: Medium (68%), value: medium}, {label: Narrow (48%), value: narrow}], default: full, required: false}
+        - {name: align, label: Block position, widget: select, options: [{label: Left, value: left}, {label: Centre, value: center}, {label: Right, value: right}], default: center, required: false, hint: Where a block that is not full width sits.}
+        - {name: spaceAbove, label: Extra space above (px), widget: number, value_type: int, min: -150, max: 300, default: 0, required: false, hint: Negative numbers pull the block up so it overlaps the one above.}
+        - {name: spaceBelow, label: Extra space below (px), widget: number, value_type: int, min: -150, max: 300, default: 0, required: false}
+        hint: The box behind the whole block, and where the block sits on the page.
+      - name: decorations
+        label: Decorations
+        label_singular: Decoration
+        widget: list
+        required: false
+        collapsed: true
+        minimize_collapsed: true
+        summary: '{{fields.image}}'
+        thumbnail: image
+        hint: 'Loose pictures placed on this block: stickers, ribbons, doodles. PNG or GIF with a see-through background works best.'
+        fields:
+        - {name: image, label: Picture, widget: image, required: false}
+        - {name: anchor, label: Attach to, widget: select, options: [{label: Top left, value: top-left}, {label: Top, value: top}, {label: Top right, value: top-right}, {label: Left, value: left}, {label: Centre, value: center}, {label: Right, value: right}, {label: Bottom left, value: bottom-left}, {label: Bottom, value: bottom}, {label: Bottom right, value: bottom-right}], default: top-left, required: false, hint: Which point of the block the picture is attached to. The matching point of the picture sits there.}
+        - {name: x, label: Move right (px), widget: number, value_type: int, min: -1500, max: 1500, default: 0, required: false, hint: Negative numbers move it left.}
+        - {name: y, label: Move down (px), widget: number, value_type: int, min: -1500, max: 1500, default: 0, required: false, hint: Negative numbers move it up.}
+        - {name: width, label: Width (px), widget: number, value_type: int, min: 8, max: 1600, default: 140, required: false, hint: Shrinks to 60% on phones.}
+        - {name: rotate, label: Rotate (degrees), widget: number, value_type: int, min: -180, max: 180, default: 0, required: false}
+        - {name: opacity, label: Opacity (%), widget: number, value_type: int, min: 0, max: 100, default: 100, required: false}
+        - {name: flip, label: Mirror left to right, widget: boolean, default: false, required: false}
+        - {name: layer, label: Layer, widget: select, options: [{label: Behind the backdrop, value: behind}, {label: 'On the backdrop, behind the text', value: middle}, {label: In front of everything, value: front}], default: front, required: false}
+- name: categories
+  label: Categories
+  label_singular: Category
+  folder: src/content/categories
+  extension: md
+  format: frontmatter
+  create: true
+  slug: '{{title}}'
+  summary: '{{title}}'
+  fields:
+  - {name: title, label: Name, widget: string, hint: For example Animation or Visual Effects. Changing the name later renames it on every entry that uses it.}

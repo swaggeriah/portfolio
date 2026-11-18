@@ -2,14 +2,19 @@
 import '../styles/global.css';
 import { site } from '../site.config';
 import { url } from '../lib/content';
+import { pageStyles } from '../lib/style';
+import type { PageSettings } from '../lib/blocks';
 
 interface Props {
   title?: string;
   description?: string;
+  page?: PageSettings; // desktop colour, desktop picture and window width from the editor
+  width?: string; // default width of the page, used when the editor leaves it empty
 }
 
-const { title, description = `${site.name}: ${site.tagline}` } = Astro.props;
+const { title, description = `${site.name}: ${site.tagline}`, page, width = '920px' } = Astro.props;
 const pageTitle = title ? `${title} · ${site.name}` : site.name;
+const styles = pageStyles(page, width);
 ---
 
 <!doctype html>
@@ -20,7 +25,7 @@ const pageTitle = title ? `${title} · ${site.name}` : site.name;
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
   </head>
-  <body>
+  <body style={styles.body}>
     <header class="taskbar">
       <div class="taskbar-inner">
         <a class="btn start" href={url('/')}>{site.name}</a>
@@ -31,7 +36,7 @@ const pageTitle = title ? `${title} · ${site.name}` : site.name;
         </nav>
       </div>
     </header>
-    <main>
+    <main style={styles.main}>
       <slot />
     </main>
     <footer class="statusbar">

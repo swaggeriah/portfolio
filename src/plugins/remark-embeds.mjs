@@ -1,11 +1,16 @@
 // Turns a link on its own line into an embed:
 //   YouTube / Vimeo / TikTok / Instagram links -> player
 //   Streamable / Dailymotion / Google Drive links -> player
+//   Spotify / SoundCloud links      -> audio player
 //   .mp4 / .webm / .mov links       -> <video>
+//   .mp3 / .wav / .ogg links        -> <audio>
 //   .png / .jpg / .gif / .webp links -> <img>
 // Also lets you write ![caption](/media/clip.mp4) for a local video file.
+//
+// The page layout blocks (src/components/Blocks.astro) use mediaFor() from this file too.
 
 const VIDEO_FILE = /\.(mp4|webm|mov|m4v|ogv)$/i;
+const AUDIO_FILE = /\.(mp3|wav|ogg|oga|m4a|aac|flac|opus)$/i;
 const IMAGE_FILE = /\.(png|jpe?g|gif|webp|avif|svg)$/i;
 const PLAYER_PERMISSIONS =
   'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen';
@@ -65,6 +70,19 @@ function driveId(u) {
   return match ? match[1] : null;
 }
 
+// open.spotify.com/track/ID, /album/ID, /playlist/ID, /episode/ID ...
+function spotify(u) {
+  if (bareHost(u) !== 'open.spotify.com') return null;
+  const match = u.pathname.match(/^\/(?:intl-[\w-]+\/)?(track|album|playlist|episode|show|artist)\/(\w+)/);
+  return match ? { type: match[1], id: match[2] } : null;
+}
+
+// soundcloud.com/artist/track (a link with at least two path parts)
+function soundcloud(u) {
+  if (bareHost(u) !== 'soundcloud.com') return false;
+  return u.pathname.split('/').filter(Boolean).length >= 2;
+}
+
 // TikTok share links like vm.tiktok.com/XXXX do not contain the video number.
 const isTikTokShortLink = (u) =>
   bareHost(u) === 'vm.tiktok.com' || (bareHost(u) === 'tiktok.com' && /^\/t\//.test(u.pathname));
@@ -74,8 +92,9 @@ const player = (src, title, extraClass) =>
 
 const caption = (text) => (text ? `<figcaption>${esc(text)}</figcaption>` : '');
 
-// Returns { kind, html } or null when the URL is not something we embed.
-function embedFor(raw, alt, base) {
+// Works out what a link or file path is and returns { kind, html } without any
+// wrapper around it, or null when it is not something we recognise.
+export function mediaFor(raw, alt = '', base = '') {
   let u;
   try {
     u = new URL(raw, 'https://placeholder.invalid');
@@ -127,20 +146,39 @@ function embedFor(raw, alt, base) {
     if (drive) {
       return { kind: 'player', html: player(`https://drive.google.com/file/d/${drive}/preview`, alt || 'Google Drive video', 'embed-wide') };
     }
+    const spot = spotify(u);
+    if (spot) {
+      const tall = !['track', 'episode'].includes(spot.type);
+      return {
+        kind: 'player',
+        html: player(`https://open.spotify.com/embed/${spot.type}/${spot.id}`, alt || 'Spotify', tall ? 'embed-spotify-tall' : 'embed-spotify'),
+      };
+    }
+    if (soundcloud(u)) {
+      return {
+        kind: 'player',
+        html: player(`https://w.soundcloud.com/player/?url=${encodeURIComponent(raw)}&visual=false`, alt || 'SoundCloud', 'embed-soundcloud'),
+      };
+    }
   }
   if (VIDEO_FILE.test(u.pathname)) {
-    return {
-      kind: 'video',
-      html: `<figure class="embed-file"><video src="${esc(src)}" controls playsinline preload="metadata"></video>${caption(alt)}</figure>`,
-    };
+    return { kind: 'video', html: `<video src="${esc(src)}" controls playsinline preload="metadata"></video>` };
+  }
+  if (AUDIO_FILE.test(u.pathname)) {
+    return { kind: 'audio', html: `<audio src="${esc(src)}" controls preload="metadata"></audio>` };
   }
   if (IMAGE_FILE.test(u.pathname)) {
-    return {
-      kind: 'image',
-      html: `<figure class="embed-file"><img src="${esc(src)}" alt="${esc(alt)}" loading="lazy" />${caption(alt)}</figure>`,
-    };
+    return { kind: 'image', html: `<img src="${esc(src)}" alt="${esc(alt)}" loading="lazy" />` };
   }
   return null;
+}
+
+// Returns { kind, html } for a link inside Markdown text, or null when it is not something we embed.
+export function embedFor(raw, alt, base) {
+  const media = mediaFor(raw, alt, base);
+  if (!media) return null;
+  if (media.kind === 'player') return media;
+  return { kind: media.kind, html: `<figure class="embed-file">${media.html}${caption(alt)}</figure>` };
 }
 
 // If a paragraph holds only a bare link, a bare URL or an image, return its embed html.
@@ -158,7 +196,7 @@ function embedFromParagraph(paragraph, base) {
   }
   if (only.type === 'image') {
     const embed = embedFor(only.url, only.alt ?? '', base);
-    // Plain images stay normal Markdown images; only videos and players get replaced.
+    // Plain images stay normal Markdown images; only videos, audio and players get replaced.
     return embed && embed.kind !== 'image' ? embed.html : null;
   }
   return null;

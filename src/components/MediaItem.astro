@@ -1,0 +1,33 @@
+---
+// One picture, video, audio file or embedded player, with an optional caption.
+import type { MediaItem } from '../lib/blocks';
+// @ts-ignore: plain JavaScript file without type declarations
+import { mediaFor } from '../plugins/remark-embeds.mjs';
+import { styleString } from '../lib/style';
+
+interface Props {
+  item: MediaItem;
+  fill?: boolean; // gallery cells fill their column instead of using the item's own size
+}
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const { item, fill = false } = Astro.props;
+const media = item.src ? mediaFor(item.src, item.alt ?? item.caption ?? '', base) : null;
+const style = fill ? undefined : styleString({ '--w': `${item.size}%` });
+---
+
+{
+  item.src && (
+    <figure
+      class:list={['media', `frame-${item.frame}`, `align-${item.align}`, media?.kind && `kind-${media.kind}`, { fill }]}
+      style={style}
+    >
+      {media ? (
+        <Fragment set:html={media.html} />
+      ) : (
+        <a href={item.src}>{item.caption || item.src.split('/').pop()}</a>
+      )}
+      {item.caption && media && <figcaption>{item.caption}</figcaption>}
+    </figure>
+  )
+}

@@ -2,6 +2,7 @@
 import { render } from 'astro:content';
 import Base from '../../../layouts/Base.astro';
 import Window from '../../../components/Window.astro';
+import Blocks from '../../../components/Blocks.astro';
 import { getProjects, getEntries, formatDate, url } from '../../../lib/content';
 
 export async function getStaticPaths() {
@@ -18,20 +19,36 @@ export async function getStaticPaths() {
 
 const { entry, project } = Astro.props;
 const { Content } = await render(entry);
+const hasText = Boolean(entry.body?.trim());
+
+// Title bar colours: the entry's own, otherwise the project's, otherwise the site default.
+const gradientTop = entry.data.gradientTop ?? project.data.gradientTop;
+const gradientBottom = entry.data.gradientBottom ?? project.data.gradientBottom;
+const colours = [
+  gradientTop ? `--grad-top: ${gradientTop}` : '',
+  gradientBottom ? `--grad-bottom: ${gradientBottom}` : '',
+]
+  .filter(Boolean)
+  .join('; ');
 ---
 
-<Base title={entry.data.title} description={entry.data.summary}>
-  <nav class="crumbs narrow">
+<Base title={entry.data.title} description={entry.data.summary} page={entry.data.page} width="840px">
+  <nav class="crumbs">
     <a class="btn" href={url('/')}>Home</a>
     <a class="btn" href={url(`/projects/${project.id}/`)}>{project.data.title}</a>
-    <span class="cell">{entry.data.category}</span>
+    {entry.categories.map((category) => <span class="cell">{category.title}</span>)}
   </nav>
 
-  <Window title={entry.data.title} heading="h1" narrow>
-    <p class="meta">{formatDate(entry.data.date)} · {entry.data.category}</p>
-    <article class="prose panel">
-      <Content />
-    </article>
+  <Window title={entry.data.title} heading="h1" style={colours || undefined}>
+    <p class="meta">{formatDate(entry.data.date)} · {entry.categories.map((category) => category.title).join(', ')}</p>
+    {
+      hasText && (
+        <article class="prose panel">
+          <Content />
+        </article>
+      )
+    }
+    <Blocks blocks={entry.data.blocks} />
     {
       entry.data.keyPoints.length > 0 && (
         <ul class="tags">

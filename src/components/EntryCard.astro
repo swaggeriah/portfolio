@@ -8,7 +8,8 @@ interface Props {
 }
 
 const { entry, projectTitle } = Astro.props;
-const { title, summary, thumbnail, category } = entry.data;
+const { title, summary, thumbnail } = entry.data;
+const categoryNames = entry.categories.map((category) => category.title).join(', ');
 ---
 
 <a class="card" href={entry.href}>
@@ -21,7 +22,7 @@ const { title, summary, thumbnail, category } = entry.data;
     )
   }
   <div class="card-body">
-    {projectTitle && <p class="meta">{projectTitle} · {category}</p>}
+    {projectTitle && <p class="meta">{projectTitle} · {categoryNames}</p>}
     {summary && <p>{summary}</p>}
   </div>
 </a>

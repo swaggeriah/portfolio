@@ -1,0 +1,32 @@
+---
+// The wrapper every block shares: its backdrop, size, position on the page and decorations.
+import type { Block } from '../lib/blocks';
+import Box from './Box.astro';
+import Decorations from './Decorations.astro';
+import { styleString } from '../lib/style';
+
+interface Props {
+  block: Exclude<Block, { type: 'divider' }>;
+}
+
+const WIDTH = { full: '100%', wide: '86%', medium: '68%', narrow: '48%' };
+const SELF = { left: 'flex-start', center: 'center', right: 'flex-end' };
+
+const { block } = Astro.props;
+const { style, decorations } = block;
+const wrap = styleString({
+  '--block-w': WIDTH[style.width],
+  'align-self': SELF[style.align],
+  'margin-top': style.spaceAbove ? `${style.spaceAbove}px` : undefined,
+  'margin-bottom': style.spaceBelow ? `${style.spaceBelow}px` : undefined,
+});
+---
+
+<section class={`block block-${block.type}`} style={wrap}>
+  <Decorations items={decorations} layer="behind" />
+  <Box box={style} class="block-box">
+    <Decorations items={decorations} layer="middle" />
+    <slot />
+  </Box>
+  <Decorations items={decorations} layer="front" />
+</section>

@@ -2,10 +2,12 @@ import { getCollection } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 
 export type Project = CollectionEntry<'projects'>;
+export type Category = { id: string; title: string };
 export type Entry = CollectionEntry<'entries'> & {
   projectId: string;
   slug: string;
   href: string;
+  categories: Category[]; // an entry can sit in several categories
 };
 
 // Prefix a site path with the base path (needed when the site is not at the domain root).
@@ -21,10 +23,33 @@ export async function getProjects(): Promise<Project[]> {
   return projects.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 }
 
+const slugify = (text: string) =>
+  text.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'other';
+
+// Turns what an entry lists (category file names, or plain names) into categories with titles.
+// A name with no category file still works: it is shown as typed.
+async function categoryResolver() {
+  const files = await getCollection('categories');
+  const byId = new Map(files.map((file) => [file.id, file.data.title]));
+  const byTitle = new Map(files.map((file) => [file.data.title.trim().toLowerCase(), file.id]));
+
+  return (values: string[]): Category[] => {
+    const found = new Map<string, Category>();
+    for (const raw of values) {
+      const value = raw.trim();
+      if (!value) continue;
+      const id = byId.has(value) ? value : (byTitle.get(value.toLowerCase()) ?? slugify(value));
+      found.set(id, { id, title: byId.get(id) ?? value });
+    }
+    return found.size ? [...found.values()] : [{ id: 'other', title: 'Other' }];
+  };
+}
+
 // Newest entry first. Drafts are visible while developing, hidden in the published site.
 export async function getEntries(): Promise<Entry[]> {
   const entries = await getCollection('entries', ({ data }) => import.meta.env.DEV || !data.draft);
   const projectIds = new Set((await getCollection('projects')).map((project) => project.id));
+  const resolveCategories = await categoryResolver();
 
   return entries
     .map((entry) => {
@@ -35,7 +60,10 @@ export async function getEntries(): Promise<Entry[]> {
         );
       }
       const slug = rest.join('/');
-      return { ...entry, projectId, slug, href: url(`/projects/${projectId}/${slug}/`) };
+      // The older single "category: Animation" line is only used while "categories" is empty.
+      const listed = entry.data.categories.length ? entry.data.categories : entry.data.category ? [entry.data.category] : [];
+      const categories = resolveCategories(listed);
+      return { ...entry, projectId, slug, href: url(`/projects/${projectId}/${slug}/`), categories };
     })
     .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 }

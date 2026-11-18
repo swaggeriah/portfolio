@@ -4,6 +4,7 @@ import { render } from 'astro:content';
 import Base from '../../../layouts/Base.astro';
 import Window from '../../../components/Window.astro';
 import EntryCard from '../../../components/EntryCard.astro';
+import Blocks from '../../../components/Blocks.astro';
 import { getProjects, getEntries, groupBy, formatDate, url } from '../../../lib/content';
 
 export async function getStaticPaths() {
@@ -20,7 +21,9 @@ export async function getStaticPaths() {
 
 const { project, entries } = Astro.props;
 const { Content } = await render(project);
-const categories = groupBy(entries, (entry) => [entry.data.category]);
+const hasDescription = Boolean(project.body?.trim());
+// An entry in several categories is listed under each of them.
+const categories = groupBy(entries, (entry) => entry.categories.map((category) => category.title));
 
 // This project's own title bar colours (see global.css for the defaults).
 const { gradientTop, gradientBottom } = project.data;
@@ -32,7 +35,7 @@ const colours = [
   .join('; ');
 ---
 
-<Base title={project.data.title} description={project.data.summary}>
+<Base title={project.data.title} description={project.data.summary} page={project.data.page}>
   <nav class="crumbs">
     <a class="btn" href={url('/')}>← Home</a>
   </nav>
@@ -41,8 +44,9 @@ const colours = [
     <div class="project-header">
       <Image src={project.data.thumbnail} alt="" width={400} class="logo" />
       <p class="meta">{formatDate(project.data.date)}</p>
-      <div class="prose panel"><Content /></div>
+      {hasDescription && <div class="prose panel"><Content /></div>}
     </div>
+    <Blocks blocks={project.data.blocks} />
   </Window>
 
   <Window title="Entries">
